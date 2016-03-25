@@ -1,6 +1,6 @@
 # Circles
 
-An demo simulate the balloon-like animation.
+A demo simulates the balloon-like animation.
 
 ![sketch.gif](./sketch.gif)
 
