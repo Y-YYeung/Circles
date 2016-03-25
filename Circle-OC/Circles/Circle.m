@@ -8,6 +8,8 @@
 
 #import "Circle.h"
 
+static CGFloat maxiRadius = 100.f;
+
 @implementation Circle
 
 - (instancetype)initWithRadius:(CGFloat)radius center:(CGPoint)center backgroundColor:(UIColor *)backgroundColor{
@@ -41,6 +43,7 @@
     CGFloat screenWidth = [UIScreen mainScreen].bounds.size.width;
     
     CGFloat maxRadius = center.x <= screenWidth - center.x ? center.x : screenWidth - center.x;
+    maxRadius = maxRadius >= maxiRadius ? maxiRadius : maxRadius;
     CGFloat radius = arc4random_uniform(maxRadius) + 1;
     
     return radius;

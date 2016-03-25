@@ -14,5 +14,6 @@
 
 - (void)addObject:(id)anObject;
 - (void)removeObject:(id)anObject;
+- (void)removeAllObjects;
 
 @end

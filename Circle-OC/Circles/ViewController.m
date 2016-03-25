@@ -13,6 +13,9 @@
 
 #define ScreenHeight [UIScreen mainScreen].bounds.size.height
 
+static NSInteger maximum = 10;
+static NSInteger minimum = 6;
+
 @interface ViewController ()
 
 @property (nonatomic, strong) KVCMutableArrayProxy *circles;
@@ -29,27 +32,55 @@
     // Generate the random seed
     srand48(time(0));
     
-    self.circles = [[KVCMutableArrayProxy alloc] init];
-    [self.circles addObserver:self forKeyPath:@"count" options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidEnteredBackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidEnterForeground:) name:UIApplicationWillEnterForegroundNotification object:nil];
+}
+
+- (void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
     [self startTimer];
 }
+
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
 
+- (void)dealloc{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSString *,id> *)change context:(void *)context{
     if ([keyPath isEqualToString:@"count"]) {
         NSInteger count = [[change valueForKey:@"new"] integerValue];
-        if (count >= 8) {
+        if (count >= maximum) {
             if (self.timer.isValid) {
-                [self stopTimer];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self stopTimer];
+                });
             }
-        } else if (count <= 3) {
-            [self startTimer];
+        } else if (count <= minimum) {
+            if (!self.timer.isValid) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self startTimer];
+                });
+            }
         }
     }
+}
+
+- (void)appDidEnterForeground:(NSNotification *)notif{
+    [self startTimer];
+//    NSLog(@"%s",__func__);
+}
+
+- (void)appDidEnteredBackground:(NSNotification *)notif{
+    [self.timer invalidate];
+    self.timer = nil;
+    
+//    NSLog(@"%s",__func__);
 }
 
 - (void)circleAnimation{
@@ -67,19 +98,30 @@
     
     [self.view addSubview:c];
     
+    [self stopTimer];
+    [self startTimer];
 }
 
 - (void)startTimer{
     
-    NSTimeInterval timeInterval = drand48() * 3 + 0.5;
+    NSTimeInterval timeInterval = drand48() / 5 - 0.5;
     
-    self.timer = [NSTimer timerWithTimeInterval:timeInterval target:self selector:@selector(circleAnimation) userInfo:nil repeats:YES];
+    self.timer = [NSTimer timerWithTimeInterval:timeInterval target:self selector:@selector(circleAnimation) userInfo:nil repeats:NO];
     [[NSRunLoop currentRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
 }
 
 - (void)stopTimer{
     [self.timer invalidate];
     self.timer = nil;
+}
+
+- (KVCMutableArrayProxy *)circles{
+    if (!_circles) {
+        _circles = [[KVCMutableArrayProxy alloc] init];
+        [_circles addObserver:self forKeyPath:@"count" options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
+    }
+    
+    return _circles;
 }
 
 @end

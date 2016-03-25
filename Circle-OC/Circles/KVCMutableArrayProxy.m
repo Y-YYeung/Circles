@@ -42,4 +42,8 @@
     [self didChangeValueForKey:@"count"];
 }
 
+- (void)removeAllObjects{
+    [self.mutableArray removeAllObjects];
+}
+
 @end
